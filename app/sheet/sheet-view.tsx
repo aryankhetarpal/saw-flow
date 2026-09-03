@@ -12,7 +12,6 @@ import type { SF, SFStatus } from "@/lib/types"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -48,8 +47,17 @@ const STATUS_OPTIONS: Array<{ value: SFStatus; label: string; icon: typeof Clock
   },
 ]
 
-function StatusControl({ sf, onChange }: { sf: SF; onChange: (status: SFStatus) => void }) {
-  const current = STATUS_OPTIONS.find((option) => option.value === sf.status) ?? STATUS_OPTIONS[0]
+function StatusControl({
+  sf,
+  onChange,
+}: {
+  sf: SF
+  onChange: (status: SFStatus) => void
+}) {
+  const current =
+    STATUS_OPTIONS.find((option) => option.value === sf.status) ??
+    STATUS_OPTIONS[0]
+
   const Icon = current.icon
 
   return (
@@ -67,34 +75,39 @@ function StatusControl({ sf, onChange }: { sf: SF; onChange: (status: SFStatus) 
         {current.label}
         <ChevronDown className="ml-0.5 h-3 w-3" aria-hidden="true" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-auto min-w-[112px]">
-        <DropdownMenuGroup>
-          {STATUS_OPTIONS.map((option) => {
-            const OptionIcon = option.icon
 
-            return (
-        <DropdownMenuItem
-          key={option.value}
-          onClick={() => onChange(option.value)}
-          className={cn(
-            "gap-2 font-medium",
-            option.value === sf.status && "bg-accent",
-          )}
-        >
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-              option.className,
-            )}
-          >
-            <OptionIcon className="h-3 w-3" aria-hidden="true" />
-            {option.label}
-          </span>
-        </DropdownMenuItem>
-      )
-    })}
-  </DropdownMenuGroup>
-</DropdownMenuContent>
+      <DropdownMenuContent
+        align="start"
+        className="w-auto min-w-[112px]"
+      >
+        {STATUS_OPTIONS.map((option) => {
+          const OptionIcon = option.icon
+
+          return (
+            <DropdownMenuItem
+              key={option.value}
+              onClick={() => onChange(option.value)}
+              className={cn(
+                "gap-2 font-medium",
+                option.value === sf.status && "bg-accent",
+              )}
+            >
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                  option.className,
+                )}
+              >
+                <OptionIcon
+                  className="h-3 w-3"
+                  aria-hidden="true"
+                />
+                {option.label}
+              </span>
+            </DropdownMenuItem>
+          )
+        })}
+      </DropdownMenuContent>
     </DropdownMenu>
   )
 }
