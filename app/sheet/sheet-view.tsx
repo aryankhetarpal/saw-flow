@@ -2,13 +2,15 @@
 
 import * as React from "react"
 import { useSearchParams } from "next/navigation"
-import { Printer } from "lucide-react"
+import { CheckCircle2, CircleDashed, Clock, ChevronDown, Printer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DateSwitcher } from "@/components/date-switcher"
 import { usePlanner } from "@/lib/store"
 import { ZONES } from "@/lib/machines"
 import { formatLong, today } from "@/lib/date"
-import type { SF } from "@/lib/types"
+import type { SF, SFStatus } from "@/lib/types"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 
 function hasMD(sf: SF): boolean {
   if (!sf.md) return false
@@ -19,13 +21,82 @@ function hasMD(sf: SF): boolean {
  * Print rows use borders and glyph markers rather than fills, so the sheet stays
  * legible on a mono laser printer where background colors are dropped.
  */
-function SheetLine({ sf }: { sf: SF }) {
+const STATUS_OPTIONS: Array<{ value: SFStatus; label: string; icon: typeof Clock; className: string }> = [
+  {
+    value: "planned",
+    label: "Planned",
+    icon: Clock,
+    className: "bg-planned-muted text-planned-foreground border-planned/40",
+  },
+  {
+    value: "partial",
+    label: "Partial",
+    icon: CircleDashed,
+    className: "bg-partial-muted text-partial-foreground border-partial/40",
+  },
+  {
+    value: "ready",
+    label: "Ready",
+    icon: CheckCircle2,
+    className: "bg-ready-muted text-ready-foreground border-ready/40",
+  },
+]
+
+function StatusControl({ sf, onChange }: { sf: SF; onChange: (status: SFStatus) => void }) {
+  const current = STATUS_OPTIONS.find((option) => option.value === sf.status) ?? STATUS_OPTIONS[0]
+  const Icon = current.icon
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        type="button"
+        aria-label={`Change status for SF ${sf.number}`}
+        title={`Change status — currently ${current.label}`}
+        className={cn(
+          "inline-flex shrink-0 items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring print:hidden",
+          current.className,
+        )}
+      >
+        <Icon className="h-3 w-3" aria-hidden="true" />
+        {current.label}
+        <ChevronDown className="ml-0.5 h-3 w-3" aria-hidden="true" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-auto min-w-[112px]">
+        {STATUS_OPTIONS.map((option) => {
+          const OptionIcon = option.icon
+          return (
+            <DropdownMenuItem
+              key={option.value}
+              onSelect={() => onChange(option.value)}
+              className={cn(
+                "gap-2 font-medium",
+                option.value === sf.status && "bg-accent",
+              )}
+            >
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                  option.className,
+                )}
+              >
+                <OptionIcon className="h-3 w-3" aria-hidden="true" />
+                {option.label}
+              </span>
+            </DropdownMenuItem>
+          )
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function SheetLine({ sf, onStatusChange }: { sf: SF; onStatusChange: (status: SFStatus) => void }) {
   const marker = sf.status === "ready" ? "✓" : sf.status === "partial" ? "½" : "○"
 
   return (
     <li className="flex items-start gap-1.5 border-b border-sheet-line py-[3px] last:border-b-0">
       <span
-        className="mt-[1px] w-3 shrink-0 text-center font-mono text-[10px] font-bold leading-tight"
+        className="mt-[1px] hidden w-3 shrink-0 text-center font-mono text-[10px] font-bold leading-tight print:inline"
         title={sf.status}
       >
         {marker}
@@ -33,6 +104,7 @@ function SheetLine({ sf }: { sf: SF }) {
       <div className="flex min-w-0 flex-1 flex-col leading-tight">
         <div className="flex flex-wrap items-baseline gap-x-1.5">
           <span className="font-mono text-[11px] font-bold tracking-tight">{sf.number}</span>
+          <StatusControl sf={sf} onChange={onStatusChange} />
           {sf.description ? (
             <span className="truncate text-[10px] text-sheet-dim">{sf.description}</span>
           ) : null}
@@ -68,7 +140,7 @@ function BlankSlots({ count = 3 }: { count?: number }) {
 
 export function SheetView() {
   const params = useSearchParams()
-  const { hydrated, sfsForDay, machinesByZone, machineById, countsForDay } = usePlanner()
+  const { hydrated, sfsForDay, machinesByZone, machineById, countsForDay, dispatch } = usePlanner()
   const [day, setDay] = React.useState(() => params.get("day") ?? today())
 
   if (!hydrated) {
@@ -165,7 +237,17 @@ export function SheetView() {
                         ) : (
                           <ul className="flex flex-col">
                             {rows.map((sf) => (
-                              <SheetLine key={sf.id} sf={sf} />
+                              <SheetLine
+                                key={sf.id}
+                                sf={sf}
+                                onStatusChange={(status) =>
+                                  dispatch({
+                                    type: "UPDATE_SF",
+                                    id: sf.id,
+                                    patch: { status, readyAt: status === "ready" ? Date.now() : sf.readyAt },
+                                  })
+                                }
+                              />
                             ))}
                           </ul>
                         )}
@@ -186,7 +268,17 @@ export function SheetView() {
                 <div className="sheet-cell flex flex-col">
                   <ul className="flex flex-col">
                     {pool.map((sf) => (
-                      <SheetLine key={sf.id} sf={sf} />
+                      <SheetLine
+                                key={sf.id}
+                                sf={sf}
+                                onStatusChange={(status) =>
+                                  dispatch({
+                                    type: "UPDATE_SF",
+                                    id: sf.id,
+                                    patch: { status, readyAt: status === "ready" ? Date.now() : sf.readyAt },
+                                  })
+                                }
+                              />
                     ))}
                   </ul>
                 </div>
