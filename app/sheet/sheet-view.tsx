@@ -9,7 +9,13 @@ import { usePlanner } from "@/lib/store"
 import { ZONES } from "@/lib/machines"
 import { formatLong, today } from "@/lib/date"
 import type { SF, SFStatus } from "@/lib/types"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 
 function hasMD(sf: SF): boolean {
@@ -62,30 +68,33 @@ function StatusControl({ sf, onChange }: { sf: SF; onChange: (status: SFStatus) 
         <ChevronDown className="ml-0.5 h-3 w-3" aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-auto min-w-[112px]">
-        {STATUS_OPTIONS.map((option) => {
-          const OptionIcon = option.icon
-          return (
-            <DropdownMenuItem
-              key={option.value}
-              onSelect={() => onChange(option.value)}
-              className={cn(
-                "gap-2 font-medium",
-                option.value === sf.status && "bg-accent",
-              )}
-            >
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                  option.className,
-                )}
-              >
-                <OptionIcon className="h-3 w-3" aria-hidden="true" />
-                {option.label}
-              </span>
-            </DropdownMenuItem>
-          )
-        })}
-      </DropdownMenuContent>
+        <DropdownMenuGroup>
+          {STATUS_OPTIONS.map((option) => {
+            const OptionIcon = option.icon
+
+            return (
+        <DropdownMenuItem
+          key={option.value}
+          onClick={() => onChange(option.value)}
+          className={cn(
+            "gap-2 font-medium",
+            option.value === sf.status && "bg-accent",
+          )}
+        >
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+              option.className,
+            )}
+          >
+            <OptionIcon className="h-3 w-3" aria-hidden="true" />
+            {option.label}
+          </span>
+        </DropdownMenuItem>
+      )
+    })}
+  </DropdownMenuGroup>
+</DropdownMenuContent>
     </DropdownMenu>
   )
 }
