@@ -58,57 +58,22 @@ function StatusControl({
     STATUS_OPTIONS.find((option) => option.value === sf.status) ??
     STATUS_OPTIONS[0]
 
-  const Icon = current.icon
-
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        type="button"
-        aria-label={`Change status for SF ${sf.number}`}
-        title={`Change status — currently ${current.label}`}
-        className={cn(
-          "inline-flex shrink-0 items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring print:hidden",
-          current.className,
-        )}
-      >
-        <Icon className="h-3 w-3" aria-hidden="true" />
-        {current.label}
-        <ChevronDown className="ml-0.5 h-3 w-3" aria-hidden="true" />
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent
-        align="start"
-        className="w-auto min-w-[112px]"
-      >
-        {STATUS_OPTIONS.map((option) => {
-          const OptionIcon = option.icon
-
-          return (
-            <DropdownMenuItem
-              key={option.value}
-              onClick={() => onChange(option.value)}
-              className={cn(
-                "gap-2 font-medium",
-                option.value === sf.status && "bg-accent",
-              )}
-            >
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                  option.className,
-                )}
-              >
-                <OptionIcon
-                  className="h-3 w-3"
-                  aria-hidden="true"
-                />
-                {option.label}
-              </span>
-            </DropdownMenuItem>
-          )
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <select
+      aria-label={`Change status for SF ${sf.number}`}
+      value={sf.status}
+      onChange={(e) => onChange(e.target.value as SFStatus)}
+      className={cn(
+        "inline-flex shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide outline-none print:hidden",
+        current.className,
+      )}
+    >
+      {STATUS_OPTIONS.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
   )
 }
 
