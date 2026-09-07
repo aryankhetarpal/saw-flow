@@ -4,6 +4,7 @@ import { CornerDownRight, MoreVertical } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -54,24 +55,23 @@ function SFActions({ sf, onMarkReady }: { sf: SF; onMarkReady: (sf: SF) => void 
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          aria-label={`Actions for SF ${sf.number}`}
-        >
-          <MoreVertical className="h-4 w-4" />
-        </button>
+      <DropdownMenuTrigger
+        className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        aria-label={`Actions for SF ${sf.number}`}
+      >
+        <MoreVertical className="h-4 w-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
-        <DropdownMenuLabel className="font-mono">{sf.number}</DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="font-mono">{sf.number}</DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
 
         {sf.status !== "ready" && (
-          <DropdownMenuItem onSelect={() => onMarkReady(sf)}>Mark ready…</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onMarkReady(sf)}>Mark ready…</DropdownMenuItem>
         )}
         {sf.status === "partial" && (
-          <DropdownMenuItem onSelect={() => dispatch({ type: "COMPLETE_SF", id: sf.id })}>
+          <DropdownMenuItem onClick={() => dispatch({ type: "COMPLETE_SF", id: sf.id })}>
             Complete SF
           </DropdownMenuItem>
         )}
@@ -82,7 +82,7 @@ function SFActions({ sf, onMarkReady }: { sf: SF; onMarkReady: (sf: SF) => void 
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="max-h-72 overflow-y-auto">
             {ZONES.map((zone) => (
-              <div key={zone.id}>
+              <DropdownMenuGroup key={zone.id}>
                 <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
                   {zone.label}
                 </DropdownMenuLabel>
@@ -90,18 +90,18 @@ function SFActions({ sf, onMarkReady }: { sf: SF; onMarkReady: (sf: SF) => void 
                   <DropdownMenuItem
                     key={m.id}
                     disabled={m.id === sf.machineId}
-                    onSelect={() => dispatch({ type: "ASSIGN_SF", id: sf.id, machineId: m.id })}
+                    onClick={() => dispatch({ type: "ASSIGN_SF", id: sf.id, machineId: m.id })}
                   >
                     {m.name}
                   </DropdownMenuItem>
                 ))}
-              </div>
+              </DropdownMenuGroup>
             ))}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
 
         {sf.machineId && (
-          <DropdownMenuItem onSelect={() => dispatch({ type: "UNASSIGN_SF", id: sf.id })}>
+          <DropdownMenuItem onClick={() => dispatch({ type: "UNASSIGN_SF", id: sf.id })}>
             Move to pool
           </DropdownMenuItem>
         )}
@@ -109,7 +109,7 @@ function SFActions({ sf, onMarkReady }: { sf: SF; onMarkReady: (sf: SF) => void 
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"
-          onSelect={() => dispatch({ type: "DELETE_SF", id: sf.id })}
+          onClick={() => dispatch({ type: "DELETE_SF", id: sf.id })}
         >
           Delete SF
         </DropdownMenuItem>
